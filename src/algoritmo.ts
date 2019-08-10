@@ -8,43 +8,50 @@ export default class Algotimo {
   geracoes: number = 10;
   tamanhoPopulacao: number = 10;
   populacoes: Populacao[] = [];
-  taxaHereditariedade: number = 30;
+  taxaSelecao: number = 30;
   taxaMutacao: number = 1;
   melhoresIndividuos: Individuo[] = [];
   constructor(
     geracoes: number,
     tamanhoPopulacao: number,
-    taxaHereditariedade: number = 30,
+    taxaSelecao: number = 30,
     taxaMutacao: number = 1
   ) {
+    if (!geracoes || !tamanhoPopulacao || !taxaSelecao) {
+      throw new Error(
+        'A taxa de seleção não pode ser igual ou inferior a zero'
+      );
+    }
     this.geracoes = geracoes;
     this.tamanhoPopulacao = tamanhoPopulacao;
-    this.taxaHereditariedade = taxaHereditariedade;
+    this.taxaSelecao = taxaSelecao;
     this.taxaMutacao = taxaMutacao;
   }
 
   iniciaAlgoritmo() {
-    console.log(`++++ Executando algoritmo com ${this.geracoes} gerações e ${this.tamanhoPopulacao} individuos ++++`)    
+    console.log(
+      `++++ Executando algoritmo com ${this.geracoes} gerações e ${
+        this.tamanhoPopulacao
+      } individuos ++++`
+    );
     do {
       this.geraNovaPopulacao();
-      let ultimaGeracao = this.populacoes[this.populacoes.length - 1];      
+      let ultimaGeracao = this.populacoes[this.populacoes.length - 1];
       ultimaGeracao.classifica();
-      ultimaGeracao.ordena();
-    //   console.log(`++++++ Geração n ${this.populacoes.length} ++++++`);
-    //   ultimaGeracao.printa();
-      this.melhoresIndividuos.push(ultimaGeracao.individuos[ultimaGeracao.individuos.length - 1])
-    } while (this.verificaContinuidade());    
+      ultimaGeracao.ordena();      
+      this.melhoresIndividuos.push(
+        ultimaGeracao.individuos[ultimaGeracao.individuos.length - 1]
+      );
+    } while (this.verificaContinuidade());
     console.log('==== Algoritmo finalizado ====');
     console.log({
       geracoes: this.populacoes.length,
-      melhorIndividui: this.populacoes[
-          this.populacoes.length - 1].individuos[
-              this.populacoes[this.populacoes.length - 1].individuos.length - 1
-            ],
+      melhorIndividui: this.populacoes[this.populacoes.length - 1].individuos[
+        this.populacoes[this.populacoes.length - 1].individuos.length - 1
+      ],
       classificacaoFinal: this.populacoes[this.populacoes.length - 1]
         .classificacao
     });
-    // console.log(util.inspect(this.melhoresIndividuos, { showHidden: false, depth: null }))
   }
   verificaContinuidade() {
     if (this.populacoes[this.populacoes.length - 1].classificacao >= 0.999) {
@@ -58,53 +65,46 @@ export default class Algotimo {
   geraNovaPopulacao() {
     if (this.populacoes.length > 0) {
       let ultimaGeracao = this.populacoes[this.populacoes.length - 1];
-    //   console.log('===> Gerando nova população');
       let novaPopulacao = this.crossOver(ultimaGeracao);
       novaPopulacao = this.mutacao(novaPopulacao);
       this.populacoes.push(novaPopulacao);
+      // novaPopulacao.printa()
     } else {
       let genesis = new Populacao(this.tamanhoPopulacao);
       genesis.geraAleatorio();
+      // console.log("==== Genesis ====")      
+      // genesis.printa()
       this.populacoes.push(genesis);
     }
   }
   crossOver(populacao: Populacao): Populacao {
-    let novaPopulacao = new Populacao(
-      this.tamanhoPopulacao,
-      this.taxaHereditariedade
-    );
-    let quantidadeHereditarios: number =
-      (this.tamanhoPopulacao * this.taxaHereditariedade) / 100;
-    if (
-      quantidadeHereditarios > 0 &&
-      quantidadeHereditarios < this.tamanhoPopulacao
-    ) {
-      for (let i = 1; i <= quantidadeHereditarios; i++) {
-        novaPopulacao.adicionaIndividuos(
-          populacao.individuos[populacao.individuos.length - i]
+    let novaPopulacao = new Populacao(this.tamanhoPopulacao, this.taxaSelecao);
+    let individuosSelecionado: Individuo[] = [];
+    let quantidadeSelecao: number =
+      (this.tamanhoPopulacao * this.taxaSelecao) / 100;
+    if (quantidadeSelecao < this.tamanhoPopulacao) {
+      quantidadeSelecao = quantidadeSelecao<=0?3:quantidadeSelecao
+
+      for (let i = 1; i <= quantidadeSelecao; i++) {
+        individuosSelecionado.push(
+          _.cloneDeep(populacao.individuos[populacao.individuos.length - i])
         );
       }
     }
-    let restante = _.cloneDeep(populacao.individuos);
-    restante = restante.slice(quantidadeHereditarios);
-    let roleta = new Roleta(restante);
+    let roleta = new Roleta(individuosSelecionado);
 
-    let mapemantoGenoma = Object.keys({ r: '', g: '', b: '' });       
-    for (let i = 0; i < restante.length; i++) {
+    let mapemantoGenoma = Object.keys({ r: '', g: '', b: '' });
+    while (novaPopulacao.individuos.length < this.tamanhoPopulacao) {
       let pai: Individuo = roleta.selectionaIndividuo();
       let mae: Individuo = roleta.selectionaIndividuo();
       let inicioCrossOver = Math.floor(Math.random() * 3);
-      let mapCrossOver = mapemantoGenoma.slice(inicioCrossOver,  + 2);
+      let mapCrossOver = mapemantoGenoma.slice(inicioCrossOver, inicioCrossOver + 2);
       let novoGenoma = { ...mae.genoma };
       mapCrossOver.map(itemGenoma => {
         novoGenoma[itemGenoma] = pai.genoma[itemGenoma];
       });
       novaPopulacao.adicionaIndividuos(new Individuo(novoGenoma));
     }
-    // console.log('=== gera cross over');
-    // console.log(
-    //   util.inspect(novaPopulacao, { showHidden: false, depth: null })
-    // );
     return novaPopulacao;
   }
   mutacao(populacao: Populacao): Populacao {
@@ -119,9 +119,7 @@ export default class Algotimo {
       }
       return individuo;
     });
-    populacao.individuos = populacaoMutada;
-    // console.log('=== gera mutacao');
-    // console.log(util.inspect(populacao, { showHidden: false, depth: null }));
+    populacao.individuos = populacaoMutada;    
     return populacao;
   }
 }
