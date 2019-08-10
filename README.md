@@ -18,8 +18,8 @@ npm start
 ```
 
 ### Parâmetros de execução
-Através do arquivo index.ts pode ser alterado a quantidade de gerações, aamostra, taxa de hereditariedade e taxa de mutação
+Através do arquivo index.ts pode ser alterado a quantidade de gerações, aamostra, taxa de seleção e taxa de mutação
 
 ```js
-const algoritmoGenetico = new Algoritmo(100,100,50,50)
+const algoritmoGenetico = new Algoritmo(50,50,20,50)
 ``` 
