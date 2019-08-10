@@ -89,15 +89,12 @@ export default class Algotimo {
     restante = restante.slice(quantidadeHereditarios);
     let roleta = new Roleta(restante);
 
-    let mapemantoGenoma = Object.keys({ r: '', g: '', b: '' });
-    let inicioCrossOver = Math.floor(Math.random() * 3);
-    let mapCrossOver = mapemantoGenoma.slice(0, inicioCrossOver);
-
+    let mapemantoGenoma = Object.keys({ r: '', g: '', b: '' });       
     for (let i = 0; i < restante.length; i++) {
       let pai: Individuo = roleta.selectionaIndividuo();
       let mae: Individuo = roleta.selectionaIndividuo();
       let inicioCrossOver = Math.floor(Math.random() * 3);
-      let mapCrossOver = mapemantoGenoma.slice(0, inicioCrossOver);
+      let mapCrossOver = mapemantoGenoma.slice(inicioCrossOver,  + 2);
       let novoGenoma = { ...mae.genoma };
       mapCrossOver.map(itemGenoma => {
         novoGenoma[itemGenoma] = pai.genoma[itemGenoma];
